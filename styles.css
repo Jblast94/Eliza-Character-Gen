@@ -1453,3 +1453,49 @@ gecko-coin-ticker-widget {
 #secret-holiday-toggle:active {
     transform: scale(0.95);
 }
+
+/* Character Image Upload */
+.image-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+#image-preview-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#image-preview {
+    max-width: 100%;
+    max-height: 200px;
+    border-radius: 8px;
+    border: 1px solid var(--b);
+}
+
+#remove-image-button {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+}
+
+#remove-image-button:hover {
+    background-color: rgba(255, 0, 0, 0.7);
+}
+
+.label-with-button {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.label-with-button label {
+    margin-bottom: 0;
+}

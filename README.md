@@ -89,6 +89,11 @@ A comprehensive web-based tool for creating, managing, and customizing AI charac
   - Secure key storage
   - Error handling
 
+### Voice Integration
+- **Text-to-Speech Generation**: Generate voice audio from character text fields (Bio, Lore, Topics).
+- **External Platform Integration**: Connects to a RunPod serverless endpoint for voice synthesis.
+- **Configurable Endpoint**: Easily set your RunPod URL in `server.js`.
+
 ## Installation
 
 1. Clone the repository:
@@ -118,6 +123,7 @@ npm start
 
 ### API Requirements
 - OpenRouter API key (obtain from [openrouter.ai](https://openrouter.ai))
+- RunPod Serverless Endpoint URL for voice generation (if using the voice feature).
 
 ## Usage Guide
 

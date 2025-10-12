@@ -118,7 +118,7 @@ const sendJsonResponse = (res, data) => {
 // Character generation endpoint
 app.post('/api/generate-character', async (req, res) => {
     try {
-        const { prompt, model } = req.body;
+        const { prompt, model, image } = req.body;
         const apiKey = req.headers['x-api-key'];
 
         // Validate inputs
@@ -163,6 +163,32 @@ app.post('/api/generate-character', async (req, res) => {
             people: []
         };
 
+        const userMessageContent = [
+            {
+                type: 'text',
+                text: `Template to follow:
+${JSON.stringify(template, null, 2)}
+
+Character description: ${prompt}
+
+Generate a complete character profile as a single JSON object following the exact template structure. Include relevant knowledge entries based on the description.`
+            }
+        ];
+
+        if (image && model.includes('vision')) {
+            userMessageContent.push({
+                type: 'image_url',
+                image_url: {
+                    url: image
+                }
+            });
+            // Add a text block to instruct the model on how to use the image
+            userMessageContent.push({
+                type: 'text',
+                text: "Use the provided image to inform the character's appearance and style."
+            });
+        }
+
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -194,12 +220,7 @@ You will receive a character description and template. Generate a complete chara
                     },
                     {
                         role: 'user',
-                        content: `Template to follow:
-${JSON.stringify(template, null, 2)}
-
-Character description: ${prompt}
-
-Generate a complete character profile as a single JSON object following the exact template structure. Include relevant knowledge entries based on the description.`
+                        content: userMessageContent
                     }
                 ],
                 temperature: 0.7,
@@ -341,7 +362,7 @@ const isTextFile = filename => ['.txt','.md','.json','.yml','.csv'].includes(
 // Add this new endpoint with the other API endpoints
 app.post('/api/refine-character', async (req, res) => {
     try {
-        const { prompt, model, currentCharacter } = req.body;
+        const { prompt, model, currentCharacter, image } = req.body;
         const apiKey = req.headers['x-api-key'];
 
         if (!prompt || !model || !currentCharacter) {
@@ -382,6 +403,35 @@ app.post('/api/refine-character', async (req, res) => {
             people: currentCharacter.people || []
         };
 
+        const userMessageContent = [
+            {
+                type: 'text',
+                text: `Current character data:
+${JSON.stringify(currentCharacter, null, 2)}
+
+Template to follow:
+${JSON.stringify(template, null, 2)}
+
+Refinement instructions: ${prompt}
+
+Output the refined character data as a single JSON object following the exact template structure. ${hasExistingKnowledge ? 'DO NOT modify the existing knowledge array.' : 'Create new knowledge entries if appropriate.'}`
+            }
+        ];
+
+        if (image && model.includes('vision')) {
+            userMessageContent.push({
+                type: 'image_url',
+                image_url: {
+                    url: image
+                }
+            });
+            // Add a text block to instruct the model on how to use the image
+            userMessageContent.push({
+                type: 'text',
+                text: "Use the provided image to inform the character's appearance and style during refinement."
+            });
+        }
+
         const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -414,15 +464,7 @@ You will receive the current character data and refinement instructions. Enhance
                     },
                     {
                         role: 'user',
-                        content: `Current character data:
-${JSON.stringify(currentCharacter, null, 2)}
-
-Template to follow:
-${JSON.stringify(template, null, 2)}
-
-Refinement instructions: ${prompt}
-
-Output the refined character data as a single JSON object following the exact template structure. ${hasExistingKnowledge ? 'DO NOT modify the existing knowledge array.' : 'Create new knowledge entries if appropriate.'}`
+                        content: userMessageContent
                     }
                 ],
                 temperature: 0.7,
@@ -508,6 +550,53 @@ Output the refined character data as a single JSON object following the exact te
     } catch (error) {
         console.error('Character refinement error:', error);
         res.status(500).json({ error: error.message || 'Failed to refine character' });
+    }
+});
+
+// Voice generation endpoint
+app.post('/api/generate-voice', async (req, res) => {
+    try {
+        const { text, voice } = req.body;
+
+        if (!text || !voice) {
+            return res.status(400).json({ error: 'Text and voice model are required' });
+        }
+
+        // ==================================================================================
+        // IMPORTANT: CONFIGURE YOUR RUNPOD URL
+        // Replace 'YOUR_RUNPOD_SERVERLESS_ENDPOINT_URL' with your actual RunPod endpoint.
+        // The voice generation feature will not work until this is configured.
+        // ==================================================================================
+        const runpodUrl = 'YOUR_RUNPOD_SERVERLESS_ENDPOINT_URL';
+
+        if (runpodUrl === 'YOUR_RUNPOD_SERVERLESS_ENDPOINT_URL') {
+            return res.status(500).json({ error: 'RunPod endpoint URL is not configured in server.js' });
+        }
+
+        const response = await fetch(runpodUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                input: {
+                    text: text,
+                    voice: voice
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.error?.message || 'Failed to generate voice from RunPod');
+        }
+
+        res.setHeader('Content-Type', 'audio/mpeg');
+        response.body.pipe(res);
+
+    } catch (error) {
+        console.error('Voice generation error:', error);
+        res.status(500).json({ error: error.message || 'Failed to generate voice' });
     }
 });
 

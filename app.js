@@ -52,6 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const knowledgeEntries = document.getElementById('knowledge-entries');
     const addKnowledgeBtn = document.getElementById('add-knowledge');
     const clientToggles = document.querySelectorAll('.client-toggle');
+    const characterImageInput = document.getElementById('character-image-input');
+    const characterImageButton = document.getElementById('character-image-button');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const removeImageButton = document.getElementById('remove-image-button');
+    const audioPlayerContainer = document.getElementById('audio-player-container');
+    const audioPlayer = document.getElementById('audio-player');
 
     // Character form elements
     const characterName = document.getElementById('character-name');
@@ -76,6 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Store files and current character data
     let collectedFiles = [];
     let currentCharacterData = null;
+    let characterImageBase64 = null;
 
     // Helper Functions
     const updateKnowledgeDisplay = (knowledge = []) => {
@@ -207,6 +215,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         return {
             name: characterName.value || '',
+            image: characterImageBase64,
             clients: selectedClients,
             modelProvider: modelProvider.value || '',
             settings: {
@@ -335,6 +344,19 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update the debug output without regenerating the character
         knowledgeContent.innerHTML = `<pre>${JSON.stringify(currentCharacterData, null, 2)}</pre>`;
         downloadBtn.disabled = false;
+
+        // Populate image preview
+        if (data.image) {
+            characterImageBase64 = data.image;
+            imagePreview.src = data.image;
+            imagePreviewContainer.style.display = 'block';
+            characterImageButton.style.display = 'none';
+        } else {
+            characterImageBase64 = null;
+            imagePreview.src = '#';
+            imagePreviewContainer.style.display = 'none';
+            characterImageButton.style.display = 'block';
+        }
     };
 
     const formatFileSize = (bytes) => {
@@ -1082,6 +1104,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Character image handlers
+    characterImageButton.addEventListener('click', () => {
+        characterImageInput.click();
+    });
+
+    characterImageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                characterImageBase64 = event.target.result;
+                imagePreview.src = characterImageBase64;
+                imagePreviewContainer.style.display = 'block';
+                characterImageButton.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    removeImageButton.addEventListener('click', () => {
+        characterImageBase64 = null;
+        imagePreview.src = '#';
+        imagePreviewContainer.style.display = 'none';
+        characterImageButton.style.display = 'block';
+        characterImageInput.value = ''; // Reset file input
+    });
+
     // Add this with your other event listeners
     document.querySelector('.santa-hat').addEventListener('click', function() {
         const hohoho = document.querySelector('.ho-ho-ho');
@@ -1126,4 +1175,49 @@ document.addEventListener('DOMContentLoaded', () => {
             hohoho.classList.add('active');
         });
     }
+
+    // Voice Generation
+    document.querySelectorAll('.generate-voice-button').forEach(button => {
+        button.addEventListener('click', async () => {
+            const forId = button.dataset.for;
+            const textInput = document.getElementById(forId);
+            const text = textInput.value.trim();
+            const voice = voiceModel.value.trim();
+
+            if (!text) {
+                alert('Please enter some text to generate voice.');
+                return;
+            }
+
+            if (!voice) {
+                alert('Please enter a voice model.');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/generate-voice`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ text, voice })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to generate voice');
+                }
+
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                audioPlayer.src = audioUrl;
+                audioPlayerContainer.style.display = 'block';
+                audioPlayer.play();
+
+            } catch (error) {
+                console.error('Voice generation error:', error);
+                alert(`Error generating voice: ${error.message}`);
+            }
+        });
+    });
 });

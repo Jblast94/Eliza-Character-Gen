@@ -240,6 +240,9 @@
         </div>
 
         <div class="main-content">
+            <div id="audio-player-container" style="display: none; margin-bottom: 24px;">
+                <audio id="audio-player" controls style="width: 100%;"></audio>
+            </div>
             <section class="section">
                 <div class="section-header">
                     <span>Basic Information</span>
@@ -289,7 +292,32 @@
                     </div>
                     <div class="form-group">
                         <label for="voice-model">Voice Model</label>
-                        <input type="text" id="voice-model" placeholder="Voice synthesis model identifier for text-to-speech">
+                        <input type="text" id="voice-model" placeholder="Voice synthesis model identifier for text-to-speech" title="Specify the voice model name for use on external platforms. This does not generate audio here.">
+                    </div>
+                </div>
+            </section>
+
+            <section class="section">
+                <div class="section-header">
+                    <span>Character Image</span>
+                    <button class="icon-button help-button" title="Upload a profile image for the character. This is only used with vision-capable models.">
+                        <i class="fa-solid fa-image"></i>
+                    </button>
+                </div>
+                <div class="section-content">
+                    <div class="form-group">
+                        <div class="image-upload-container">
+                            <input type="file" id="character-image-input" accept="image/*" style="display: none;">
+                            <button id="character-image-button" class="action-button" title="Select Image">
+                                <i class="fa-solid fa-upload"></i> Select Image
+                            </button>
+                            <div id="image-preview-container" style="display: none;">
+                                <img id="image-preview" src="#" alt="Character Preview">
+                                <button id="remove-image-button" class="action-button delete-button" title="Remove Image">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -304,15 +332,30 @@
                     </div>
                     <div class="section-content">
                         <div class="form-group">
-                            <label for="bio">Bio</label>
+                            <div class="label-with-button">
+                                <label for="bio">Bio</label>
+                                <button class="action-button generate-voice-button" data-for="bio" title="Generate Voice for Bio">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
                             <textarea id="bio" placeholder="Write the character's biography. Include their background, life experiences, and key personality traits. Write one complete sentence per line."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="lore">Lore</label>
+                            <div class="label-with-button">
+                                <label for="lore">Lore</label>
+                                <button class="action-button generate-voice-button" data-for="lore" title="Generate Voice for Lore">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
                             <textarea id="lore" placeholder="Describe the character's world, history, and important events that shaped them. Write one complete sentence per line."></textarea>
                         </div>
                         <div class="form-group">
-                            <label for="topics">Topics</label>
+                            <div class="label-with-button">
+                                <label for="topics">Topics</label>
+                                <button class="action-button generate-voice-button" data-for="topics" title="Generate Voice for Topics">
+                                    <i class="fa-solid fa-volume-high"></i>
+                                </button>
+                            </div>
                             <textarea id="topics" placeholder="List topics the character is knowledgeable about or interested in. Write one complete sentence per line."></textarea>
                         </div>
                     </div>
