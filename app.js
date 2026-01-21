@@ -719,20 +719,52 @@ document.addEventListener('DOMContentLoaded', () => {
         return null;
     };
 
-    const getAllBackups = () => {
-        const backups = [];
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key.startsWith(BACKUP_KEY_PREFIX)) {
-                try {
-                    const backup = JSON.parse(localStorage.getItem(key));
-                    backups.push(backup);
-                } catch (error) {
-                    console.error('Error loading backup:', error);
+    const getAllBackupsAsync = () => {
+        return new Promise((resolve) => {
+            const backupKeys = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith(BACKUP_KEY_PREFIX)) {
+                    backupKeys.push(key);
                 }
             }
-        }
-        return backups.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            const backups = [];
+            let index = 0;
+
+            function processChunk() {
+                const promises = [];
+                const start = Date.now();
+                while (index < backupKeys.length && (Date.now() - start) < 50) {
+                    const key = backupKeys[index];
+                    const jsonString = localStorage.getItem(key);
+                    if (jsonString) {
+                        promises.push(
+                            new Response(jsonString).json()
+                            .catch(err => {
+                                console.error(`Failed to parse backup for key ${key}:`, err);
+                                return null; // Return null for failed parses
+                            })
+                        );
+                    }
+                    index++;
+                }
+
+                Promise.all(promises)
+                    .then(parsedBackups => {
+                        // Filter out nulls from failed parses
+                        backups.push(...parsedBackups.filter(b => b !== null));
+
+                        if (index < backupKeys.length) {
+                            setTimeout(processChunk, 0); // Yield to main thread
+                        } else {
+                            resolve(backups.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+                        }
+                    });
+            }
+
+            processChunk();
+        });
     };
 
     const deleteBackup = (name) => {
@@ -743,9 +775,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateBackupList = () => {
         const backupList = document.getElementById('backup-list');
-        const backups = getAllBackups();
-        
-        backupList.innerHTML = backups.map(backup => `
+        backupList.innerHTML = '<div class="loading-backups">Loading backups...</div>';
+
+        getAllBackupsAsync().then(backups => {
+            if (backups.length === 0) {
+                backupList.innerHTML = '<div class="no-backups">No backups found</div>';
+                return;
+            }
+            backupList.innerHTML = backups.map(backup => `
             <div class="backup-item">
                 <input type="text" class="backup-name" value="${backup.name}" 
                     title="${new Date(backup.timestamp).toLocaleString()}"
@@ -759,7 +796,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fa-solid fa-trash"></i>
                 </button>
             </div>
-        `).join('');
+            `).join('');
     };
 
     // Add these to window for the onclick handlers
