@@ -439,11 +439,121 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    modelSelect.addEventListener('change', () => {
-        const selectedModel = modelSelect.value;
-        if (selectedModel) {
-            const provider = selectedModel.split('/')[0];
-            modelProvider.value = provider;
+    // Model Selector Setup
+    const modelSelectInput = document.getElementById('model-select');
+    const modelDropdown = document.getElementById('model-dropdown');
+    const modelOptions = document.querySelectorAll('.model-option');
+    let currentSelectedModelValue = '';
+
+    const initModelSelector = () => {
+        // Toggle dropdown on input focus
+        modelSelectInput.addEventListener('focus', () => {
+            modelDropdown.style.display = 'block';
+            filterModelOptions(modelSelectInput.value);
+        });
+
+        // Handle input typing and filtering
+        modelSelectInput.addEventListener('input', (e) => {
+            const searchText = e.target.value;
+            filterModelOptions(searchText);
+            // Allow custom model entry - set the value as typed
+            currentSelectedModelValue = searchText;
+            // Don't set provider until a model is actually selected from dropdown
+        });
+
+        // Handle model option clicks
+        modelOptions.forEach(option => {
+            option.addEventListener('click', () => {
+                const modelValue = option.getAttribute('data-value');
+                const modelText = option.textContent;
+                
+                modelSelectInput.value = modelText;
+                currentSelectedModelValue = modelValue;
+                
+                // Update provider based on selected model
+                if (modelValue) {
+                    const provider = modelValue.split('/')[0];
+                    modelProvider.value = provider;
+                }
+                
+                // Update selected state in dropdown
+                updateModelSelectionUI(option);
+                modelDropdown.style.display = 'none';
+            });
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.model-selector-wrapper')) {
+                modelDropdown.style.display = 'none';
+            }
+        });
+
+        // Prevent dropdown from closing when clicking inside it
+        modelDropdown.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('model-option')) {
+                e.stopPropagation();
+            }
+        });
+    };
+
+    const filterModelOptions = (searchText) => {
+        const searchLower = searchText.toLowerCase();
+        let hasVisibleOptions = false;
+
+        modelOptions.forEach(option => {
+            const optionText = option.textContent.toLowerCase();
+            const optionValue = option.getAttribute('data-value').toLowerCase();
+            
+            if (optionText.includes(searchLower) || optionValue.includes(searchLower)) {
+                option.classList.remove('no-match');
+                hasVisibleOptions = true;
+            } else {
+                option.classList.add('no-match');
+            }
+        });
+
+        // Update selected state
+        modelOptions.forEach(option => {
+            const modelValue = option.getAttribute('data-value');
+            if (modelValue === currentSelectedModelValue) {
+                option.classList.add('selected');
+            } else {
+                option.classList.remove('selected');
+            }
+        });
+    };
+
+    const updateModelSelectionUI = (selectedOption) => {
+        modelOptions.forEach(option => {
+            option.classList.remove('selected');
+        });
+        selectedOption.classList.add('selected');
+    };
+
+    // Make model value accessible for form submission
+    const getSelectedModelValue = () => {
+        return currentSelectedModelValue || modelSelectInput.value;
+    };
+
+    // Initialize model selector
+    initModelSelector();
+
+    // Override modelSelect.value getter/setter for compatibility
+    Object.defineProperty(modelSelect, 'value', {
+        get() {
+            return currentSelectedModelValue;
+        },
+        set(val) {
+            currentSelectedModelValue = val;
+            // Find and display the corresponding model text
+            const option = Array.from(modelOptions).find(o => o.getAttribute('data-value') === val);
+            if (option) {
+                modelSelectInput.value = option.textContent;
+                updateModelSelectionUI(option);
+            } else {
+                modelSelectInput.value = val;
+            }
         }
     });
 

@@ -142,6 +142,111 @@ select {
     padding-right: 2.5rem;
 }
 
+/* Custom Model Selector Styles */
+.model-selector-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.model-select-input {
+    width: 100%;
+    padding: 12px !important;
+    border: 1px solid var(--b);
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    background-color: var(--s);
+    color: var(--t);
+    box-sizing: border-box;
+    cursor: text;
+}
+
+.model-select-input:focus {
+    outline: none;
+    border-color: var(--p);
+    box-shadow: 0 0 0 3px rgba(255, 140, 55, 0.1);
+}
+
+.model-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background-color: var(--s);
+    border: 1px solid var(--b);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.model-group {
+    padding: 8px 0;
+}
+
+.model-group:first-child {
+    padding-top: 0;
+}
+
+.model-group:last-child {
+    padding-bottom: 0;
+}
+
+.model-group-label {
+    padding: 8px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--p);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    background-color: var(--h);
+    border-bottom: 1px solid var(--b);
+}
+
+.model-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-size: 14px;
+    color: var(--t);
+}
+
+.model-option:hover {
+    background-color: var(--h);
+    color: var(--p);
+}
+
+.model-option.selected {
+    background-color: rgba(255, 140, 55, 0.1);
+    color: var(--p);
+    font-weight: 500;
+    border-left: 3px solid var(--p);
+    padding-left: 9px;
+}
+
+.model-option.no-match {
+    display: none;
+}
+
+.model-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+
+.model-dropdown::-webkit-scrollbar-track {
+    background-color: transparent;
+}
+
+.model-dropdown::-webkit-scrollbar-thumb {
+    background-color: var(--b);
+    border-radius: 3px;
+}
+
+.model-dropdown::-webkit-scrollbar-thumb:hover {
+    background-color: var(--p);
+}
+
 .primary-button {
     background-color: var(--p);
     color: white;
